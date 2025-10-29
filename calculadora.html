@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de Copistería</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --border: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --success-hover: #059669;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --warning: #f59e0b;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    header p {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    @media (max-width: 1024px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+    
+    .service-tabs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .service-tabs button {
+      padding: 0.75rem 1rem;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    
+    .service-tabs button:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+    
+    .service-tabs button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    
+    input[type="number"]:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    input[type="number"] {
+      text-align: right;
+    }
+    
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    
+    .checkbox-wrapper:hover {
+      border-color: var(--accent);
+    }
+    
+    .checkbox-wrapper input[type="checkbox"] {
+      width: 1.25rem;
+      height: 1.25rem;
+      cursor: pointer;
+    }
+    
+    .checkbox-wrapper label {
+      margin: 0;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+    
+    .info-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: var(--bg-primary);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    
+    button {
+      padding: 0.875rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+    }
+    
+    .btn-primary {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--success-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 2px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: var(--bg-primary);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .btn-danger:hover {
+      background: var(--danger-hover);
+    }
+    
+    .btn-action {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-action:hover {
+      background: var(--accent-hover);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    
+    th {
+      background: var(--bg-primary);
+      padding: 0.875rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      border-bottom: 2px solid var(--border);
+    }
+    
+    td {
+      padding: 1rem 0.875rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9375rem;
+    }
+    
+    .text-right {
+      text-align: right;
+    }
+    
+    .total-row {
+      font-weight: 700;
+      font-size: 1.5rem;
+      background: var(--bg-primary);
+      color: var(--success);
+    }
+    
+    .cart-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .cart-actions button {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .empty-cart {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+    }
+    
+    .service-description {
+      background: var(--bg-primary);
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      border-left: 3px solid var(--accent);
+    }
+    
+    @media print {
+      header, .service-tabs, .form-group, .button-group, .cart-actions, .btn-danger {
+        display: none !important;
+      }
+      
+      .card {
+        border: 1px solid #000;
+        box-shadow: none;
+      }
+      
+      body {
+        background: white;
+        color: black;
+      }
+      
+      .container {
+        max-width: 100%;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📋 Calculadora de Copistería</h1>
+    <p>Calcula presupuestos de forma rápida y profesional</p>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <!-- Panel izquierdo: Formulario -->
+      <div>
+        <div class="card">
+          <h2>Nuevo Servicio</h2>
+          
+          <div class="service-tabs" id="serviceTabs"></div>
+          
+          <div id="serviceDescription" class="service-description"></div>
+          
+          <form id="serviceForm">
+            <!-- El formulario se genera dinámicamente -->
+          </form>
+          
+          <div class="button-group">
+            <button type="button" class="btn-primary" id="btnAddLine">
+              ➕ Añadir al Carrito
+            </button>
+            <button type="button" class="btn-secondary" id="btnClearForm">
+              🔄 Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel derecho: Vista previa -->
+      <div>
+        <div class="card">
+          <h2>Vista Previa</h2>
+          <div id="preview" style="padding: 1rem; min-height: 150px;">
+            <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+              Configura un servicio para ver el precio
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carrito -->
+    <div class="card">
+      <h2>🛒 Carrito de Servicios</h2>
+      
+      <div id="cartContent">
+        <div class="empty-cart">
+          El carrito está vacío. Añade servicios para crear un presupuesto.
+        </div>
+      </div>
+      
+      <div class="cart-actions" id="cartActions" style="display: none;">
+        <button type="button" class="btn-action" id="btnPrint">
+          🖨️ Imprimir / Guardar PDF
+        </button>
+        <button type="button" class="btn-secondary" id="btnExport">
+          💾 Exportar JSON
+        </button>
+        <button type="button" class="btn-secondary" id="btnImport">
+          📂 Importar JSON
+        </button>
+        <button type="button" class="btn-danger" id="btnClearCart">
+          🗑️ Vaciar Carrito
+        </button>
+      </div>
+      
+      <input type="file" id="fileImport" accept=".json" style="display: none;" />
+    </div>
+  </div>
+
+  <script>
+    // ==================== TARIFAS ====================
+    const TARIFFS = {
+      impresion: {
+        normal: {
+          BN: {
+            A6: [0.025, 0.015, 0.012],
+            A5: [0.05, 0.03, 0.025],
+            A4: [0.1, 0.06, 0.045],
+            A3: [0.3, 0.3, 0.3],
+            A2: [4.0, 4.0, 4.0],
+            A1: [7.0, 7.0, 7.0],
+            A0: [14.0, 14.0, 14.0]
+          },
+          COLOR: {
+            A6: [0.12, 0.1, 0.08],
+            A5: [0.25, 0.2, 0.17],
+            A4: [0.5, 0.4, 0.35],
+            A3: [1.2, 1.2, 1.2],
+            A2: [0, 0, 0],
+            A1: [0, 0, 0],
+            A0: [0, 0, 0]
+          }
+        },
+        especiales: {
+          BN: { A6: 0.1, A5: 0.2, A4: 0.4, A3: 1.0 },
+          COLOR: { A6: 0.2, A5: 0.4, A4: 0.8, A3: 2.0 }
+        },
+        lineal: {
+          A3: 0.6,
+          A2: 1.75,
+          A1: 2.2,
+          A0: 3.5
+        }
+      },
+      plastificados: { A4: 1.0, A3: 2.3, A2: 6.0 },
+      encuadernaciones: {
+        tapa: {
+          A4: [2.0, 3.0, 3.5, 3.5],
+          A3: [4.5, 5.0, 5.5, 5.5]
+        },
+        tipos: {
+          CHANEL: 9.0,
+          COSIDO_COLA: 12.0,
+          DURA: 20.0
+        }
+      },
+      foto: {
+        A6: 0.5,
+        A5: 1.0,
+        A2: 9.0,
+        A1: 16.0,
+        A0: 28.0
+      }
+    };
+
+    // ==================== SERVICIOS ====================
+    const SERVICES = [
+      {
+        id: 'impresion',
+        label: '🖨️ Impresión',
+        description: 'Impresión en papel normal con diferentes tamaños y modos (B/N o Color)'
+      },
+      {
+        id: 'impresion_especial',
+        label: '✨ Impresión Especial',
+        description: 'Impresión en papel especial de mayor calidad'
+      },
+      {
+        id: 'lineal',
+        label: '📏 Impresión Lineal',
+        description: 'Impresión por metros lineales para formatos grandes'
+      },
+      {
+        id: 'plastificado',
+        label: '🔒 Plastificado',
+        description: 'Plastificado de documentos para mayor durabilidad'
+      },
+      {
+        id: 'enc_tapa',
+        label: '📚 Encuadernación Tapa',
+        description: 'Encuadernación con tapa transparente, precio según número de hojas'
+      },
+      {
+        id: 'enc_tipo',
+        label: '📖 Encuadernación Premium',
+        description: 'Encuadernaciones especiales: Chanel, Cosido y cola, o Tapa dura'
+      },
+      {
+        id: 'foto',
+        label: '📸 Impresión Foto',
+        description: 'Impresión de fotografías en diferentes tamaños'
+      }
+    ];
+
+    // ==================== ESTADO ====================
+    let currentService = 'impresion';
+    const cart = [];
+
+    // ==================== UTILIDADES ====================
+    const fmt = n => new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(n || 0);
+
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => document.querySelectorAll(sel);
+
+    function toFacesFromPages(pages, doubleSide) {
+      pages = Number(pages || 0);
+      if (!doubleSide) return pages;
+      return Math.ceil(pages / 2) * 2;
+    }
+
+    // ==================== UI - TABS ====================
+    function renderTabs() {
+      const container = $('#serviceTabs');
+      container.innerHTML = '';
+      
+      SERVICES.forEach(service => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = service.label;
+        btn.className = currentService === service.id ? 'active' : '';
+        btn.onclick = () => {
+          currentService = service.id;
+          renderTabs();
+          renderForm();
+          updatePreview();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    // ==================== UI - FORMULARIO ====================
+    function renderForm() {
+      const service = SERVICES.find(s => s.id === currentService);
+      $('#serviceDescription').textContent = service.description;
+      
+      const form = $('#serviceForm');
+      form.innerHTML = '';
+
+      if (currentService === 'impresion' || currentService === 'impresion_especial') {
+        const sizes = currentService === 'impresion_especial' 
+          ? ['A6', 'A5', 'A4', 'A3']
+          : ['A6', 'A5', 'A4', 'A3', 'A2', 'A1', 'A0'];
+        
+        form.innerHTML = `
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tamaño</label>
+              <select id="size">
+                ${sizes.map(s => `<option value="${s}">${s}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Modo</label>
+              <select id="mode">
+                <option value="BN">Blanco y Negro</option>
+                <option value="COLOR">Color</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Páginas del documento</label>
+              <input type="number" id="pages" min="1" step="1" value="1" />
+            </div>
+            <div class="form-group">
+              <label>Número de copias</label>
+              <input type="number" id="copies" min="1" step="1" value="1" />
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="checkbox-wrapper">
+              <input type="checkbox" id="double" />
+              <label for="double">Impresión a doble cara</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <span class="info-badge" id="facesInfo">Caras a imprimir: 1</span>
+          </div>
+        `;
+        
+        const updateFaces = () => {
+          const pages = Number($('#pages').value || 0);
+          const double = $('#double').checked;
+          const faces = toFacesFromPages(pages, double);
+          $('#facesInfo').textContent = `Caras a imprimir: ${faces}`;
+          updatePreview();
+        };
+        
+        $('#pages').oninput = updateFaces;
+        $('#double').onchange = updateFaces;
+        $('#copies').oninput = updatePreview;
+        $('#size').onchange = updatePreview;
+        $('#mode').onchange = updatePreview;
+      }
+      
+      if (currentService === 'lineal') {
+        form.innerHTML = `
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tamaño</label>
+              <select id="size">
+                ${['A3', 'A2', 'A1', 'A0'].map(s => `<option value="${s}">${s}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Metros lineales</label>
+              <input type="number" id="meters" min="0.01" step="0.01" value="1" />
+            </div>
+          </div>
+        `;
+        $('#size').onchange = updatePreview;
+        $('#meters').oninput = updatePreview;
+      }
+      
+      if (currentService === 'plastificado') {
+        form.innerHTML = `
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tamaño</label>
+              <select id="size">
+                ${['A4', 'A3', 'A2'].map(s => `<option value="${s}">${s}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Unidades</label>
+              <input type="number" id="units" min="1" step="1" value="1" />
+            </div>
+          </div>
+        `;
+        $('#size').onchange = updatePreview;
+        $('#units').oninput = updatePreview;
+      }
+      
+      if (currentService === 'enc_tapa') {
+        form.innerHTML = `
+          <div class="form-row">
+            <div class="form-group">
+              <label>Formato</label>
+              <select id="format">
+                <option value="A4">A4</option>
+                <option value="A3">A3</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Hojas del bloque</label>
+              <input type="number" id="sheets" min="1" step="1" value="30" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Unidades</label>
+            <input type="number" id="units" min="1" step="1" value="1" />
+          </div>
+        `;
+        $('#format').onchange = updatePreview;
+        $('#sheets').oninput = updatePreview;
+        $('#units').oninput = updatePreview;
+      }
+      
+      if (currentService === 'enc_tipo') {
+        form.innerHTML = `
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tipo de encuadernación</label>
+              <select id="etype">
+                <option value="CHANEL">Chanel</option>
+                <option value="COSIDO_COLA">Cosido y cola</option>
+                <option value="DURA">Tapa dura</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Unidades</label>
+              <input type="number" id="units" min="1" step="1" value="1" />
+            </div>
+          </div>
+        `;
+        $('#etype').onchange = updatePreview;
+        $('#units').oninput = updatePreview;
+      }
+      
+      if (currentService === 'foto') {
+        form.innerHTML = `
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tamaño</label>
+              <select id="size">
+                ${['A6', 'A5', 'A2', 'A1', 'A0'].map(s => `<option value="${s}">${s}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Unidades</label>
+              <input type="number" id="units" min="1" step="1" value="1" />
+            </div>
+          </div>
+        `;
+        $('#size').onchange = updatePreview;
+        $('#units').oninput = updatePreview;
+      }
+      
+      updatePreview();
+    }
+
+    // ==================== CÁLCULOS ====================
+    function getPriceImpresion(size, mode, copies) {
+      const tariff = TARIFFS.impresion.normal[mode]?.[size];
+      if (!tariff || tariff[0] === 0) return 0;
+      
+      if (mode === 'BN') {
+        if (copies <= 20) return tariff[0];
+        if (copies <= 100) return tariff[1];
+        return tariff[2];
+      } else {
+        if (copies <= 10) return tariff[0];
+        if (copies <= 50) return tariff[1];
+        return tariff[2];
+      }
+    }
+
+    function calculateLine(payload) {
+      let price = 0, units = 0, detail = '';
+      
+      if (payload.service === 'impresion' || payload.service === 'impresion_especial') {
+        const { size, mode, pages, copies, double } = payload;
+        const faces = toFacesFromPages(pages, double);
+        
+        if (payload.service === 'impresion') {
+          price = getPriceImpresion(size, mode, copies);
+        } else {
+          price = TARIFFS.impresion.especiales[mode]?.[size] || 0;
+        }
+        
+        units = faces * copies;
+        const modeLabel = mode === 'BN' ? 'B/N' : 'Color';
+        const typeLabel = payload.service === 'impresion_especial' ? 'Especial ' : '';
+        detail = `${typeLabel}${size} · ${modeLabel} · ${faces} caras × ${copies} copias`;
+      }
+      
+      if (payload.service === 'lineal') {
+        const { size, meters } = payload;
+        price = TARIFFS.impresion.lineal[size] || 0;
+        units = meters;
+        detail = `${size} · ${meters} metros`;
+      }
+      
+      if (payload.service === 'plastificado') {
+        const { size, units: u } = payload;
+        price = TARIFFS.plastificados[size] || 0;
+        units = u;
+        detail = `${size}`;
+      }
+      
+      if (payload.service === 'enc_tapa') {
+        const { format, sheets, units: u } = payload;
+        const tramos = TARIFFS.encuadernaciones.tapa[format];
+        if (tramos) {
+          let idx = 0;
+          if (sheets <= 50) idx = 0;
+          else if (sheets <= 80) idx = 1;
+          else if (sheets <= 100) idx = 2;
+          else idx = 3;
+          price = tramos[idx];
+        }
+        units = u;
+        detail = `${format} · ${sheets} hojas`;
+      }
+      
+      if (payload.service === 'enc_tipo') {
+        const { etype, units: u } = payload;
+        price = TARIFFS.encuadernaciones.tipos[etype] || 0;
+        units = u;
+        const labels = {
+          CHANEL: 'Chanel',
+          COSIDO_COLA: 'Cosido y cola',
+          DURA: 'Tapa dura'
+        };
+        detail = labels[etype] || etype;
+      }
+      
+      if (payload.service === 'foto') {
+        const { size, units: u } = payload;
+        price = TARIFFS.foto[size] || 0;
+        units = u;
+        detail = `${size}`;
+      }
+      
+      return {
+        price,
+        units,
+        subtotal: price * units,
+        detail
+      };
+    }
+
+    // ==================== PREVIEW ====================
+    function updatePreview() {
+      const payload = readFormPayload();
+      if (!payload) return;
+      
+      const calc = calculateLine(payload);
+      const service = SERVICES.find(s => s.id === currentService);
+      
+      $('#preview').innerHTML = `
+        <div style="padding: 1rem;">
+          <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">
+            ${service.label}
+          </div>
+          <div style="color: var(--text-secondary); margin-bottom: 1rem;">
+            ${calc.detail}
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <div style="font-size: 0.875rem; color: var(--text-secondary);">Precio unitario</div>
+              <div style="font-size: 1.25rem; font-weight: 700;">${fmt(calc.price)}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.875rem; color: var(--text-secondary);">Unidades</div>
+              <div style="font-size: 1.25rem; font-weight: 700;">${calc.units.toLocaleString('es-ES')}</div>
+            </div>
+          </div>
+          <div style="padding-top: 1rem; border-top: 2px solid var(--border);">
+            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+              Subtotal
+            </div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--success);">
+              ${fmt(calc.subtotal)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==================== CARRITO ====================
+    function readFormPayload() {
+      const base = { service: currentService };
+      
+      if (currentService === 'impresion' || currentService === 'impresion_especial') {
+        return {
+          ...base,
+          size: $('#size').value,
+          mode: $('#mode').value,
+          pages: Number($('#pages').value || 0),
+          copies: Number($('#copies').value || 0),
+          double: $('#double')?.checked || false
+        };
+      }
+      
+      if (currentService === 'lineal') {
+        return {
+          ...base,
+          size: $('#size').value,
+          meters: Number($('#meters').value || 0)
+        };
+      }
+      
+      if (currentService === 'plastificado') {
+        return {
+          ...base,
+          size: $('#size').value,
+          units: Number($('#units').value || 0)
+        };
+      }
+      
+      if (currentService === 'enc_tapa') {
+        return {
+          ...base,
+          format: $('#format').value,
+          sheets: Number($('#sheets').value || 0),
+          units: Number($('#units').value || 0)
+        };
+      }
+      
+      if (currentService === 'enc_tipo') {
+        return {
+          ...base,
+          etype: $('#etype').value,
+          units: Number($('#units').value || 0)
+        };
+      }
+      
+      if (currentService === 'foto') {
+        return {
+          ...base,
+          size: $('#size').value,
+          units: Number($('#units').value || 0)
+        };
+      }
+      
+      return null;
+    }
+
+    function addToCart() {
+      const payload = readFormPayload();
+      if (!payload) return;
+      
+      const calc = calculateLine(payload);
+      if (calc.subtotal === 0) {
+        alert('Este servicio no está disponible con la configuración seleccionada');
+        return;
+      }
+      
+      cart.push({ ...payload, ...calc });
+      renderCart();
+      
+      // Feedback visual
+      const btn = $('#btnAddLine');
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Añadido';
+      btn.style.background = 'var(--success)';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '';
+      }, 1000);
+    }
+
+    function renderCart() {
+      const container = $('#cartContent');
+      const actions = $('#cartActions');
+      
+      if (cart.length === 0) {
+        container.innerHTML = '<div class="empty-cart">El carrito está vacío. Añade servicios para crear un presupuesto.</div>';
+        actions.style.display = 'none';
+        return;
+      }
+      
+      actions.style.display = 'flex';
+      
+      let total = 0;
+      let html = '<table><thead><tr>';
+      html += '<th>Servicio</th>';
+      html += '<th>Detalle</th>';
+      html += '<th class="text-right">Unidades</th>';
+      html += '<th class="text-right">Precio</th>';
+      html += '<th class="text-right">Subtotal</th>';
+      html += '<th></th>';
+      html += '</tr></thead><tbody>';
+      
+      cart.forEach((item, idx) => {
+        total += item.subtotal;
+        const service = SERVICES.find(s => s.id === item.service);
+        html += `<tr>`;
+        html += `<td>${service.label}</td>`;
+        html += `<td>${item.detail}</td>`;
+        html += `<td class="text-right">${item.units.toLocaleString('es-ES')}</td>`;
+        html += `<td class="text-right">${fmt(item.price)}</td>`;
+        html += `<td class="text-right">${fmt(item.subtotal)}</td>`;
+        html += `<td class="text-right"><button class="btn-danger" onclick="removeFromCart(${idx})">Eliminar</button></td>`;
+        html += `</tr>`;
+      });
+      
+      html += '</tbody><tfoot><tr class="total-row">';
+      html += '<td colspan="4" class="text-right">TOTAL</td>';
+      html += `<td class="text-right">${fmt(total)}</td>`;
+      html += '<td></td>';
+      html += '</tr></tfoot></table>';
+      
+      container.innerHTML = html;
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    function clearCart() {
+      if (cart.length === 0) return;
+      if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
+        cart.length = 0;
+        renderCart();
+      }
+    }
+
+    // ==================== EXPORT/IMPORT ====================
+    function exportCart() {
+      const data = {
+        cart,
+        tariffs: TARIFFS,
+        timestamp: new Date().toISOString(),
+        version: '2.0'
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `presupuesto_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function importCart() {
+      $('#fileImport').click();
+    }
+
+    $('#fileImport').onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        if (data.cart && Array.isArray(data.cart)) {
+          cart.length = 0;
+          data.cart.forEach(item => cart.push(item));
+          renderCart();
+          alert('Carrito importado correctamente');
+        } else {
+          alert('El archivo no contiene un carrito válido');
+        }
+      } catch (err) {
+        alert('Error al leer el archivo JSON');
+      }
+      
+      e.target.value = '';
+    };
+
+    // ==================== EVENT LISTENERS ====================
+    $('#btnAddLine').onclick = addToCart;
+    $('#btnClearForm').onclick = () => renderForm();
+    $('#btnPrint').onclick = () => window.print();
+    $('#btnExport').onclick = exportCart;
+    $('#btnImport').onclick = importCart;
+    $('#btnClearCart').onclick = clearCart;
+
+    // ==================== INICIALIZACIÓN ====================
+    renderTabs();
+    renderForm();
+  </script>
+</body>
+</html>
