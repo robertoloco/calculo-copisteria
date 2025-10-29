@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora Copistería</title>
+  <style>
+    :root {
+      --bg: #0f172a; /* slate-900 */
+      --panel: #111827; /* gray-900 */
+      --muted: #1f2937; /* gray-800 */
+      --text: #e5e7eb; /* gray-200 */
+      --text-dim: #9ca3af; /* gray-400 */
+      --accent: #22c55e; /* green-500 */
+      --accent-2: #38bdf8; /* sky-400 */
+      --danger: #ef4444; /* red-500 */
+      --warning: #f59e0b; /* amber-500 */
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--text); }
+    header { padding: 20px; background: linear-gradient(90deg, #0ea5e9 0%, #22c55e 100%); color: white; }
+    header h1 { margin:0; font-size: 22px; }
+    main { display: grid; grid-template-columns: 360px 1fr; gap: 16px; padding: 16px; }
+    .card { background: var(--panel); border: 1px solid var(--muted); border-radius: 14px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .card h2 { margin: 0 0 8px; font-size: 16px; color: #ffffff; }
+    .muted { color: var(--text-dim); font-size: 12px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    label { font-size: 12px; color: var(--text-dim); display:block; margin-bottom:6px; }
+    input, select, textarea { width: 100%; background: #0b1220; border: 1px solid #162033; color: var(--text); padding: 10px; border-radius: 10px; outline: none; }
+    input[type="number"] { text-align: right; }
+    .btns { display:flex; flex-wrap: wrap; gap:8px; }
+    button { background: var(--muted); color: var(--text); border: 1px solid #283548; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+    button:hover { filter: brightness(1.1); }
+    .btn-accent { background: var(--accent); color: #062a11; border: none; }
+    .btn-blue { background: var(--accent-2); color: #062133; border: none; }
+    .btn-danger { background: var(--danger); color: #fff; border: none; }
+    .btn-warning { background: var(--warning); color: #111; border: none; }
+    .service-tabs { display:flex; gap:8px; margin-bottom:10px; flex-wrap: wrap; }
+    .service-tabs button { background:#0b1220; border:1px solid #162033; }
+    .service-tabs button.active { background: var(--accent-2); color:#00161f; border-color: transparent; }
+    .cart { width: 100%; border-collapse: collapse; }
+    .cart th, .cart td { border-bottom: 1px solid #1f2a3d; padding: 8px; font-size: 13px; }
+    .right { text-align: right; }
+    .total { font-size: 22px; font-weight: 800; }
+    .pill { display:inline-block; padding: 3px 8px; border-radius: 999px; background:#0b1220; border:1px solid #162033; font-size: 11px; }
+    .grid-3 { display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    details { background:#0b1220; border:1px solid #162033; border-radius: 10px; padding:10px; }
+    summary { cursor: pointer; font-weight:600; }
+    .footer { display:flex; gap:8px; justify-content:flex-end; }
+    @media (max-width: 980px){ main { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Calculadora Copistería · v1</h1>
+    <div class="muted">Carga tu Excel de tarifas para usar precios reales. Luego añade líneas al carrito y obtén el total.</div>
+  </header>
+
+  <main>
+    <!-- PANEL IZQUIERDO: Configuración y Línea actual -->
+    <section class="card">
+      <h2>Tarifas</h2>
+      <div class="muted" style="margin-bottom:8px">Sube el Excel <em>calculo tarifas.xlsx</em> o edita la tabla JSON manualmente.</div>
+      <div class="row" style="margin-bottom:8px">
+        <div>
+          <label>Archivo Excel</label>
+          <input type="file" id="excelInput" accept=".xls,.xlsx" />
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button id="btnParse" class="btn-blue" title="Leer tarifas del Excel">Cargar tarifas</button>
+        </div>
+      </div>
+      <details>
+        <summary>Ver/editar JSON de tarifas</summary>
+        <textarea id="tariffsJson" rows="14" spellcheck="false" style="margin-top:8px"></textarea>
+        <div class="btns" style="margin-top:8px">
+          <button id="btnLoadJson" class="btn-blue">Usar este JSON</button>
+          <button id="btnResetJson" class="btn-warning">Restaurar ejemplo</button>
+        </div>
+        <div class="muted" style="margin-top:6px">Consejo: guarda/recupera tu JSON para no depender del Excel en el día a día.</div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>Nueva línea</h2>
+      <div class="service-tabs" id="serviceTabs"></div>
+      <form id="lineForm"></form>
+      <div class="btns" style="margin-top:10px">
+        <button class="btn-accent" id="btnAddLine">Añadir línea</button>
+        <button id="btnClearForm" type="button">Limpiar</button>
+      </div>
+    </section>
+
+    <!-- PANEL DERECHO: Carrito y acciones -->
+    <section class="card" style="grid-column: 1 / -1">
+      <h2>Carrito</h2>
+      <table class="cart" id="cartTable">
+        <thead>
+          <tr>
+            <th>Servicio</th>
+            <th>Detalle</th>
+            <th class="right">Unidades</th>
+            <th class="right">Precio</th>
+            <th class="right">Subtotal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cartBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="right total">TOTAL</td>
+            <td class="right total" id="grandTotal">0,00 €</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="footer" style="margin-top:10px">
+        <button id="btnExportBudget">Imprimir/Guardar</button>
+        <button id="btnExportJson">Exportar carrito (JSON)</button>
+        <button id="btnImportJson">Importar carrito (JSON)</button>
+        <input type="file" id="cartImport" accept=".json" style="display:none" />
+      </div>
+    </section>
+  </main>
+
+  <!-- SheetJS para leer Excel (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+  /******************** SCHEMA DE TARIFAS ********************/
+  const defaultTariffs = {
+    impresion: {
+      normal: {
+        BN: { // tramos: [hasta_20, hasta_100, mas_100]
+          // ejemplo (rellena con tus valores reales del Excel al cargarlo)
+          A6: [0.10, 0.06, 0.045],
+          A5: [0.10, 0.06, 0.045],
+          A4: [0.10, 0.06, 0.045],
+          A3: [0.20, 0.12, 0.10],
+          A2: [0.00, 0.00, 0.00],
+          A1: [0.00, 0.00, 0.00],
+          A0: [0.00, 0.00, 0.00]
+        },
+        COLOR: { // tramos: [hasta_10, hasta_50, mas_100]
+          A6: [0.12, 0.10, 0.08], // CORRECCIÓN confirmada: 0.08 en +100
+          A5: [0.50, 0.40, 0.35],
+          A4: [0.50, 0.40, 0.35],
+          A3: [1.20, 0.90, 0.70],
+          A2: [0.00, 0.00, 0.00],
+          A1: [0.00, 0.00, 0.00],
+          A0: [0.00, 0.00, 0.00]
+        },
+        LINEAL: { // precio por metro lineal
+          A3: 2.00, A2: 4.00, A1: 8.00, A0: 12.00
+        }
+      },
+      especiales: { // precios por cara (sin tramos) para papel especial
+        BN: { A6: 0.15, A5: 0.15, A4: 0.15, A3: 0.30 },
+        COLOR: { A6: 0.60, A5: 0.60, A4: 0.60, A3: 1.00 }
+      }
+    },
+    plastificados: { A4: 1.00, A3: 2.30, A2: 6.00 },
+    encuadernaciones: {
+      tapa: { // tramos por nº hojas del bloque (<=50, <=80, <=100, >100)
+        A4: [2.00, 3.00, 3.50, 3.50], // CORRECCIÓN: >100 = 3.50
+        A3: [4.50, 5.00, 5.50, 5.50]  // CORRECCIÓN: >100 = 5.50
+      },
+      otros: { CHANEL: 9.00, "COSIDO_COLA": 12.00, DURA: 20.00 }
+    },
+    foto: { // A4/A3 NO SE OFRECEN (confirmado)
+      A6: 0.50, A5: 1.00, A2: 9.00, A1: 16.00, A0: 28.00
+    }
+  };
+
+  let TARIFFS = JSON.parse(JSON.stringify(defaultTariffs));
+
+  /******************** UTILIDADES ********************/
+  const fmt = n => (new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n||0));
+  const el = sel => document.querySelector(sel);
+  const create = (tag, attrs={}) => { const e=document.createElement(tag); Object.assign(e, attrs); return e; };
+
+  function toFacesFromPages(pages, doubleSide){
+    pages = Number(pages||0);
+    if(!doubleSide) return pages; // simple: 1 cara por página
+    // Doble cara: cada hoja admite 2 caras; si páginas impar, la última hoja cuenta 2 caras igualmente
+    return Math.ceil(pages/2) * 2;
+  }
+
+  /******************** PARSEO EXCEL ********************/
+  // Intentamos mapear a nuestro schema desde hojas y columnas típicas del archivo del usuario
+  function parseExcelToTariffs(workbook){
+    const tariffs = JSON.parse(JSON.stringify(defaultTariffs));
+    const byName = {};
+    workbook.SheetNames.forEach(n => byName[n.toLowerCase()] = n);
+
+    // Utilidades de lectura
+    const readSheet = nameGuess => {
+      if(!nameGuess) return null; const ws = workbook.Sheets[nameGuess]; if(!ws) return null; return XLSX.utils.sheet_to_json(ws, {defval: null, raw: true});
+    };
+
+    // Heurística para hojas
+    const hojaImp = readSheet(byName["impresion"] || byName["impresión"] || workbook.SheetNames[0]);
+    const hojaPlas = readSheet(byName["plastificados"]);
+    const hojaEncu = readSheet(byName["encuadernaciones"]);
+    const hojaEsp = readSheet(byName["especiales"]);
+    const hojaFoto = readSheet(byName["foto"] || byName["fotos"]);
+
+    // IMPRESIÓN NORMAL (tramos)
+    if(hojaImp){
+      // Buscamos filas que contengan tamaño y columnas BN_20, BN_100, BN_+100, COLOR_10, COLOR_50, COLOR_+100, LINEAL
+      // Permitimos diferentes encabezados (flexible). Intentaremos normalizar claves.
+      const normalize = key => String(key||"").trim().toUpperCase().replace(/\s+/g,'').replace(/Á/g,'A');
+      const keys = Object.keys(hojaImp[0]||{});
+      const map = {};
+      keys.forEach(k => map[normalize(k)] = k);
+
+      const colSize = map['TAMANO'] || map['TAMAÑO'] || map['SIZE'] || map['FORMATO'];
+      const cBN20 = map['BN20'] || map['B/N20'] || map['B/N_20'] || map['BN_20'];
+      const cBN100 = map['BN100'] || map['B/N100'] || map['B/N_100'] || map['BN_100'];
+      const cBNMAS = map['BN+100'] || map['B/N+100'] || map['B/N_MAS100'] || map['MAS100BN'];
+      const cC10 = map['COLOR10'] || map['COLOR_10'];
+      const cC50 = map['COLOR50'] || map['COLOR_50'];
+      const cCMAS = map['COLOR+100'] || map['COLOR_MAS100'];
+      const cLINEAL = map['LINEAL'];
+
+      hojaImp.forEach(r => {
+        const size = String(r[colSize]||'').toUpperCase();
+        if(!size) return;
+        if(cBN20&&cBN100&&cBNMAS){
+          tariffs.impresion.normal.BN[size] = [Number(r[cBN20]||0), Number(r[cBN100]||0), Number(r[cBNMAS]||0)];
+        }
+        if(cC10&&cC50&&cCMAS){
+          // corrección automática si detectamos 0.8 en A6 +100 -> 0.08
+          let arr = [Number(r[cC10]||0), Number(r[cC50]||0), Number(r[cCMAS]||0)];
+          if(size === 'A6' && arr[2] === 0.8) arr[2] = 0.08;
+          tariffs.impresion.normal.COLOR[size] = arr;
+        }
+        if(cLINEAL && r[cLINEAL]!=null){
+          tariffs.impresion.normal.LINEAL[size] = Number(r[cLINEAL]||0);
+        }
+      });
+    }
+
+    if(hojaEsp){
+      // Esperamos columnas: Tamaño, BN, COLOR
+      const normalize = key => String(key||"").trim().toUpperCase().replace(/\s+/g,'');
+      const keys = Object.keys(hojaEsp[0]||{});
+      const map = {}; keys.forEach(k => map[normalize(k)] = k);
+      const colSize = map['TAMANO'] || map['TAMAÑO'] || map['SIZE'] || map['FORMATO'];
+      const cBN = map['BN'] || map['B/N'] || map['BN_'];
+      const cC = map['COLOR'];
+
+      hojaEsp.forEach(r => {
+        const size = String(r[colSize]||'').toUpperCase(); if(!size) return;
+        if(cBN) tariffs.impresion.especiales.BN[size] = Number(r[cBN]||0);
+        if(cC) tariffs.impresion.especiales.COLOR[size] = Number(r[cC]||0);
+      });
+    }
+
+    if(hojaPlas){
+      // columnas: tamaño, precio
+      const normalize = key => String(key||"").trim().toUpperCase().replace(/\s+/g,'');
+      const keys = Object.keys(hojaPlas[0]||{});
+      const map = {}; keys.forEach(k => map[normalize(k)] = k);
+      const colSize = map['TAMANO'] || map['TAMAÑO'] || map['SIZE'];
+      const colPrecio = map['PRECIO'] || map['PVP'] || map['EUR'];
+      hojaPlas.forEach(r => {
+        const size = String(r[colSize]||'').toUpperCase(); if(!size) return;
+        tariffs.plastificados[size] = Number(r[colPrecio]||0);
+      });
+    }
+
+    if(hojaEncu){
+      // Para TAPA: columnas A4_50, A4_80, A4_100, y quizá >100; igual para A3
+      const norm = s => String(s||"").trim().toUpperCase();
+      const keys = Object.keys(hojaEncu[0]||{}).map(norm);
+      // Intento: filas con cabecera TAPA y filas con tipos fijos
+      hojaEncu.forEach(row => {
+        const r = {}; Object.keys(row).forEach(k => r[norm(k)] = row[k]);
+        if(r['TAPA'] || r['TRAMO'] || r['HOJAS']){
+          // Intentamos leer por columnas estándar
+          const A4_50 = r['A4_50'] ?? r['A4<=50'];
+          const A4_80 = r['A4_80'] ?? r['A4<=80'];
+          const A4_100 = r['A4_100'] ?? r['A4<=100'];
+          const A3_50 = r['A3_50'] ?? r['A3<=50'];
+          const A3_80 = r['A3_80'] ?? r['A3<=80'];
+          const A3_100 = r['A3_100'] ?? r['A3<=100'];
+          if([A4_50,A4_80,A4_100].some(v => v!=null)){
+            tariffs.encuadernaciones.tapa.A4 = [Number(A4_50||0), Number(A4_80||0), Number(A4_100||0), Number(A4_100||0)];
+          }
+          if([A3_50,A3_80,A3_100].some(v => v!=null)){
+            tariffs.encuadernaciones.tapa.A3 = [Number(A3_50||0), Number(A3_80||0), Number(A3_100||0), Number(A3_100||0)];
+          }
+        }
+        // Tipos fijos
+        if(r['CHANEL']!=null) tariffs.encuadernaciones.otros.CHANEL = Number(r['CHANEL']);
+        if(r['COSIDOYCOLA']!=null || r['COSIDO_COLA']!=null) tariffs.encuadernaciones.otros.COSIDO_COLA = Number(r['COSIDOYCOLA'] ?? r['COSIDO_COLA']);
+        if(r['DURA']!=null) tariffs.encuadernaciones.otros.DURA = Number(r['DURA']);
+      });
+      // Correcciones >100 confirmadas
+      tariffs.encuadernaciones.tapa.A4[3] = tariffs.encuadernaciones.tapa.A4[3] || 3.50;
+      tariffs.encuadernaciones.tapa.A3[3] = tariffs.encuadernaciones.tapa.A3[3] || 5.50;
+    }
+
+    if(hojaFoto){
+      const normalize = key => String(key||"").trim().toUpperCase();
+      const keys = Object.keys(hojaFoto[0]||{});
+      const map = {}; keys.forEach(k => map[normalize(k)] = k);
+      const colSize = map['TAMANO'] || map['TAMAÑO'] || map['FORMATO'];
+      const colPrecio = map['PRECIO'] || map['PVP'] || map['EUR'];
+      hojaFoto.forEach(r => {
+        const size = String(r[colSize]||'').toUpperCase();
+        if(size === 'A4' || size === 'A3') return; // no se ofrecen
+        tariffs.foto[size] = Number(r[colPrecio]||0);
+      });
+    }
+
+    return tariffs;
+  }
+
+  /******************** UI – Servicios ********************/
+  const SERVICES = [
+    { id:'impresion', label:'Impresión' },
+    { id:'impresion_especial', label:'Imp. Especial' },
+    { id:'lineal', label:'Impresión Lineal' },
+    { id:'plastificado', label:'Plastificado' },
+    { id:'enc_tapa', label:'Encuadernación (Tapa)' },
+    { id:'enc_tipo', label:'Encuadernación (Tipos)' },
+    { id:'foto', label:'Foto' }
+  ];
+
+  let currentService = SERVICES[0].id;
+  const serviceTabs = el('#serviceTabs');
+  function renderTabs(){
+    serviceTabs.innerHTML = '';
+    SERVICES.forEach(s => {
+      const b = create('button', { type:'button', textContent: s.label });
+      if(currentService===s.id) b.classList.add('active');
+      b.addEventListener('click', ()=>{ currentService = s.id; renderTabs(); renderForm(); });
+      serviceTabs.appendChild(b);
+    })
+  }
+
+  function selectOptions(arr){
+    return arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+  }
+
+  function renderForm(){
+    const f = el('#lineForm');
+    f.innerHTML = '';
+    if(currentService==='impresion'){
+      f.innerHTML = `
+        <div class="row">
+          <div>
+            <label>Tamaño</label>
+            <select id="size">${selectOptions(['A6','A5','A4','A3','A2','A1','A0'])}</select>
+          </div>
+          <div>
+            <label>Modo</label>
+            <select id="mode">
+              <option value="BN">B/N</option>
+              <option value="COLOR">Color</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Páginas del documento</label>
+            <input id="pages" type="number" min="1" step="1" value="1" />
+          </div>
+          <div>
+            <label>Copias</label>
+            <input id="copies" type="number" min="1" step="1" value="1" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label><input type="checkbox" id="double" /> Doble cara</label>
+          </div>
+          <div>
+            <span class="pill" id="facesInfo">Caras impresas: 1</span>
+          </div>
+        </div>
+      `;
+      const updateFacesInfo = ()=>{
+        const pages = Number(el('#pages').value||0);
+        const dbl = el('#double').checked;
+        const faces = toFacesFromPages(pages, dbl);
+        el('#facesInfo').textContent = `Caras impresas: ${faces}`;
+      };
+      ['#pages','#double'].forEach(sel=> el(sel).addEventListener('input', updateFacesInfo));
+      updateFacesInfo();
+    }
+    if(currentService==='impresion_especial'){
+      f.innerHTML = `
+        <div class="row">
+          <div>
+            <label>Tamaño</label>
+            <select id="size">${selectOptions(['A6','A5','A4','A3'])}</select>
+          </div>
+          <div>
+            <label>Modo</label>
+            <select id="mode">
+              <option value="BN">B/N</option>
+              <option value="COLOR">Color</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Páginas del documento</label>
+            <input id="pages" type="number" min="1" step="1" value="1" />
+          </div>
+          <div>
+            <label>Copias</label>
+            <input id="copies" type="number" min="1" step="1" value="1" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label><input type="checkbox" id="double" /> Doble cara</label>
+          </div>
+          <div>
+            <span class="pill" id="facesInfo">Caras impresas: 1</span>
+          </div>
+        </div>
+      `;
+      const updateFacesInfo = ()=>{
+        const pages = Number(el('#pages').value||0);
+        const dbl = el('#double').checked;
+        const faces = toFacesFromPages(pages, dbl);
+        el('#facesInfo').textContent = `Caras impresas: ${faces}`;
+      };
+      ['#pages','#double'].forEach(sel=> el(sel).addEventListener('input', updateFacesInfo));
+      updateFacesInfo();
+    }
+    if(currentService==='lineal'){
+      f.innerHTML = `
+        <div class="row">
+          <div>
+            <label>Tamaño</label>
+            <select id="size">${selectOptions(['A3','A2','A1','A0'])}</select>
+          </div>
+          <div>
+            <label>Metros lineales</label>
+            <input id="meters" type="number" min="0" step="0.01" value="1" />
+          </div>
+        </div>`;
+    }
+    if(currentService==='plastificado'){
+      f.innerHTML = `
+        <div class="row">
+          <div>
+            <label>Tamaño</label>
+            <select id="size">${selectOptions(['A4','A3','A2'])}</select>
+          </div>
+          <div>
+            <label>Unidades</label>
+            <input id="units" type="number" min="1" step="1" value="1" />
+          </div>
+        </div>`;
+    }
+    if(currentService==='enc_tapa'){
+      f.innerHTML = `
+        <div class="row">
+          <div>
+            <label>Formato</label>
+            <select id="format">${selectOptions(['A4','A3'])}</select>
+          </div>
+          <div>
+            <label>Hojas del bloque</label>
+            <input id="sheets" type="number" min="1" step="1" value="30" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Unidades</label>
+            <input id="units" type="number" min="1" step="1" value="1" />
+          </div>
+        </div>`;
+    }
+    if(currentService==='enc_tipo'){
+      f.innerHTML = `
+        <div class="row">
+          <div>
+            <label>Tipo</label>
+            <select id="etype">
+              <option value="CHANEL">Chanel</option>
+              <option value="COSIDO_COLA">Cosido y cola</option>
+              <option value="DURA">Dura</option>
+            </select>
+          </div>
+          <div>
+            <label>Unidades</label>
+            <input id="units" type="number" min="1" step="1" value="1" />
+          </div>
+        </div>`;
+    }
+    if(currentService==='foto'){
+      f.innerHTML = `
+        <div class="row">
+          <div>
+            <label>Tamaño</label>
+            <select id="size">${selectOptions(['A6','A5','A2','A1','A0'])}</select>
+          </div>
+          <div>
+            <label>Unidades</label>
+            <input id="units" type="number" min="1" step="1" value="1" />
+          </div>
+        </div>
+        <div class="muted">A4/A3 no se ofrecen (confirmado).</div>`;
+    }
+  }
+
+  /******************** CÁLCULO ********************/
+  function priceImpresionNormal(size, mode, copies){
+    const t = TARIFFS.impresion.normal[mode]?.[size];
+    if(!t) return 0;
+    if(mode==='BN'){
+      if(copies<=20) return t[0];
+      if(copies<=100) return t[1];
+      return t[2];
+    } else {
+      if(copies<=10) return t[0];
+      if(copies<=50) return t[1];
+      return t[2];
+    }
+  }
+
+  function subtotalLinea(payload){
+    switch(payload.service){
+      case 'impresion': {
+        const { size, mode, pages, copies, double } = payload;
+        const faces = toFacesFromPages(pages, double);
+        const pu = priceImpresionNormal(size, mode, copies);
+        return { price: pu, units: faces*copies, subtotal: (pu||0) * (faces||0) * (copies||0), detail: `${size} · ${mode} · ${faces} caras × ${copies} copias` };
+      }
+      case 'impresion_especial': {
+        const { size, mode, pages, copies, double } = payload;
+        const faces = toFacesFromPages(pages, double);
+        const pu = TARIFFS.impresion.especiales[mode]?.[size] || 0;
+        return { price: pu, units: faces*copies, subtotal: (pu||0) * (faces||0) * (copies||0), detail: `Especial ${size} · ${mode} · ${faces} caras × ${copies} copias` };
+      }
+      case 'lineal': {
+        const { size, meters } = payload;
+        const pu = TARIFFS.impresion.normal.LINEAL?.[size] || 0;
+        return { price: pu, units: meters, subtotal: (pu||0) * (Number(meters)||0), detail: `${size} · ${meters} m` };
+      }
+      case 'plastificado': {
+        const { size, units } = payload;
+        const pu = TARIFFS.plastificados?.[size] || 0;
+        return { price: pu, units, subtotal: (pu||0) * (Number(units)||0), detail: `${size}` };
+      }
+      case 'enc_tapa': {
+        const { format, sheets, units } = payload;
+        const tramos = TARIFFS.encuadernaciones.tapa?.[format];
+        if(!tramos) return { price:0, units, subtotal:0, detail: `${format}` };
+        let idx = 0;
+        if(sheets<=50) idx = 0; else if(sheets<=80) idx=1; else if(sheets<=100) idx=2; else idx=3; // >100 confirmado
+        const pu = tramos[idx] || 0;
+        return { price: pu, units, subtotal: (pu||0) * (Number(units)||0), detail: `${format} · ${sheets} hojas` };
+      }
+      case 'enc_tipo': {
+        const { etype, units } = payload;
+        const pu = TARIFFS.encuadernaciones.otros?.[etype] || 0;
+        const label = (etype==='COSIDO_COLA')? 'Cosido y cola' : (etype==='DURA'?'Dura':'Chanel');
+        return { price: pu, units, subtotal: (pu||0) * (Number(units)||0), detail: label };
+      }
+      case 'foto': {
+        const { size, units } = payload;
+        const pu = TARIFFS.foto?.[size] || 0;
+        return { price: pu, units, subtotal: (pu||0) * (Number(units)||0), detail: `${size}` };
+      }
+    }
+    return { price:0, units:0, subtotal:0, detail:'' };
+  }
+
+  /******************** CARRITO ********************/
+  const cart = [];
+  function addCurrentLine(){
+    const p = readFormPayload();
+    if(!p) return;
+    const calc = subtotalLinea(p);
+    cart.push({ ...p, ...calc });
+    renderCart();
+  }
+
+  function readFormPayload(){
+    switch(currentService){
+      case 'impresion': return {
+        service:'impresion',
+        size: el('#size').value,
+        mode: el('#mode').value,
+        pages: Number(el('#pages').value||0),
+        copies: Number(el('#copies').value||0),
+        double: el('#double').checked
+      };
+      case 'impresion_especial': return {
+        service:'impresion_especial',
+        size: el('#size').value,
+        mode: el('#mode').value,
+        pages: Number(el('#pages').value||0),
+        copies: Number(el('#copies').value||0),
+        double: el('#double').checked
+      };
+      case 'lineal': return {
+        service:'lineal',
+        size: el('#size').value,
+        meters: Number(el('#meters').value||0)
+      };
+      case 'plastificado': return {
+        service:'plastificado',
+        size: el('#size').value,
+        units: Number(el('#units').value||0)
+      };
+      case 'enc_tapa': return {
+        service:'enc_tapa',
+        format: el('#format').value,
+        sheets: Number(el('#sheets').value||0),
+        units: Number(el('#units').value||0)
+      };
+      case 'enc_tipo': return {
+        service:'enc_tipo',
+        etype: el('#etype').value,
+        units: Number(el('#units').value||0)
+      };
+      case 'foto': return {
+        service:'foto',
+        size: el('#size').value,
+        units: Number(el('#units').value||0)
+      };
+    }
+  }
+
+  function renderCart(){
+    const tbody = el('#cartBody');
+    tbody.innerHTML = '';
+    let total = 0;
+    cart.forEach((it, idx) => {
+      total += it.subtotal;
+      const tr = create('tr');
+      const svcLabel = SERVICES.find(s=>s.id===it.service)?.label || it.service;
+      tr.innerHTML = `
+        <td>${svcLabel}</td>
+        <td>${it.detail}</td>
+        <td class="right">${(it.units||0).toLocaleString('es-ES')}</td>
+        <td class="right">${fmt(it.price)}</td>
+        <td class="right">${fmt(it.subtotal)}</td>
+        <td class="right"><button class="btn-danger" data-idx="${idx}">Quitar</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    el('#grandTotal').textContent = fmt(total);
+    tbody.querySelectorAll('button[data-idx]').forEach(b=>{
+      b.addEventListener('click', (e)=>{
+        const i = Number(e.currentTarget.getAttribute('data-idx'));
+        cart.splice(i,1); renderCart();
+      })
+    })
+  }
+
+  /******************** EXPORT/IMPORT ********************/
+  el('#btnExportBudget').addEventListener('click', ()=>{ window.print(); });
+  el('#btnExportJson').addEventListener('click', ()=>{
+    const data = { cart, tariffs: TARIFFS, ts: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = create('a', { href:url, download:`presupuesto_${Date.now()}.json` });
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+  el('#btnImportJson').addEventListener('click', ()=> el('#cartImport').click());
+  el('#cartImport').addEventListener('change', async (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const txt = await file.text();
+    try{
+      const obj = JSON.parse(txt);
+      if(obj.tariffs) TARIFFS = obj.tariffs;
+      if(Array.isArray(obj.cart)){
+        cart.length = 0; obj.cart.forEach(x=> cart.push(x));
+      }
+      renderCart();
+      el('#tariffsJson').value = JSON.stringify(TARIFFS, null, 2);
+      alert('Carrito y tarifas importados');
+    }catch(err){ alert('Archivo JSON no válido'); }
+  });
+
+  /******************** TARIFAS JSON PANEL ********************/
+  function loadTariffsJsonFromTextarea(){
+    try{
+      const obj = JSON.parse(el('#tariffsJson').value);
+      TARIFFS = obj; alert('Tarifas cargadas');
+    }catch(err){
+      alert('JSON inválido');
+    }
+  }
+  el('#btnLoadJson').addEventListener('click', loadTariffsJsonFromTextarea);
+  el('#btnResetJson').addEventListener('click', ()=>{ el('#tariffsJson').value = JSON.stringify(defaultTariffs, null, 2); loadTariffsJsonFromTextarea(); });
+
+  /******************** EXCEL PARSER – SheetJS ********************/
+  async function readExcel(file){
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type:'array' });
+    return wb;
+  }
+
+  el('#btnParse').addEventListener('click', async ()=>{
+    const file = el('#excelInput').files?.[0];
+    if(!file){ alert('Selecciona tu archivo Excel primero'); return; }
+    try{
+      const wb = await readExcel(file);
+      const newTariffs = parseExcelToTariffs(wb);
+      // Correcciones explícitas confirmadas por el usuario
+      if(newTariffs?.impresion?.normal?.COLOR?.A6){
+        const t = newTariffs.impresion.normal.COLOR.A6;
+        if(t[2] === 0.8) t[2] = 0.08;
+      }
+      // >100 hojas en encuadernación
+      if(newTariffs?.encuadernaciones?.tapa?.A4){
+        const a4 = newTariffs.encuadernaciones.tapa.A4; a4[3] = a4[3] || 3.50;
+      }
+      if(newTariffs?.encuadernaciones?.tapa?.A3){
+        const a3 = newTariffs.encuadernaciones.tapa.A3; a3[3] = a3[3] || 5.50;
+      }
+      // A4/A3 foto no se ofrecen -> no añadimos aunque existan en Excel
+      if(newTariffs?.foto){ delete newTariffs.foto.A4; delete newTariffs.foto.A3; }
+
+      TARIFFS = newTariffs;
+      el('#tariffsJson').value = JSON.stringify(TARIFFS, null, 2);
+      alert('Tarifas cargadas desde Excel');
+    }catch(err){
+      console.error(err);
+      alert('No pude leer el Excel. Revisa el archivo o edita el JSON manualmente.');
+    }
+  });
+
+  /******************** INICIALIZACIÓN ********************/
+  el('#tariffsJson').value = JSON.stringify(defaultTariffs, null, 2);
+  renderTabs();
+  renderForm();
+  el('#btnAddLine').addEventListener('click', (e)=>{ e.preventDefault(); addCurrentLine(); });
+  el('#btnClearForm').addEventListener('click', (e)=>{ e.preventDefault(); renderForm(); });
+  </script>
+</body>
+</html>
